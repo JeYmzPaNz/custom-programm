@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jayz's Inventory Management</title>
+  <style>
+    :root {
+      --bg: #0d0b16;
+      --panel: #171426;
+      --panel-2: #211b35;
+      --border: #302747;
+      --text: #f4f0ff;
+      --muted: #aaa1bd;
+      --purple: #9b6cff;
+      --purple-2: #7044c7;
+      --green: #55d6a1;
+      --yellow: #f3c969;
+      --red: #ff788b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: radial-gradient(circle at top right, #21153c 0, var(--bg) 38%);
+      color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      min-height: 100vh;
+    }
+    button, input, select { font: inherit; }
+    .app { max-width: 1240px; margin: auto; padding: 28px 22px 48px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:28px; }
+    .brand { display:flex; align-items:center; gap:13px; }
+    .logo {
+      width:48px; height:48px; border-radius:15px; display:grid; place-items:center;
+      background: linear-gradient(135deg, #b28aff, #6b42c5); font-size:23px; font-weight:900;
+      box-shadow: 0 8px 28px #8c5cf344;
+    }
+    h1 { font-size: clamp(21px, 3vw, 29px); margin:0; letter-spacing:-.7px; }
+    .subtitle { color:var(--muted); font-size:13px; margin-top:4px; }
+    .header-actions { display:flex; gap:9px; flex-wrap:wrap; }
+    button {
+      border:1px solid var(--border); background:var(--panel-2); color:var(--text);
+      padding:10px 14px; border-radius:10px; cursor:pointer; transition:.18s;
+    }
+    button:hover { transform:translateY(-1px); border-color:var(--purple); }
+    button.primary { background:linear-gradient(135deg, #9b6cff, #7044c7); border:0; font-weight:700; }
+    button.danger { color:#ff9aa8; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+    .stat, .panel { background:linear-gradient(145deg, #1b1730, #151222); border:1px solid var(--border); border-radius:16px; }
+    .stat { padding:18px; }
+    .stat-label { color:var(--muted); font-size:13px; }
+    .stat-value { font-size:27px; font-weight:800; margin-top:9px; letter-spacing:-.6px; }
+    .stat-note { color:var(--muted); font-size:12px; margin-top:5px; }
+    .toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:22px 0 13px; flex-wrap:wrap; }
+    .toolbar h2 { font-size:18px; margin:0; }
+    .filters { display:flex; gap:9px; flex-wrap:wrap; }
+    input, select {
+      background:#100e1b; color:var(--text); border:1px solid var(--border); border-radius:10px;
+      padding:11px 12px; outline:none; min-width:0;
+    }
+    input:focus, select:focus { border-color:var(--purple); box-shadow:0 0 0 3px #9b6cff22; }
+    #search { width:min(260px, 65vw); }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; min-width:760px; }
+    th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.8px; font-weight:700; text-align:left; }
+    th, td { padding:15px 16px; border-bottom:1px solid #30274799; }
+    td { font-size:13px; }
+    tbody tr:last-child td { border-bottom:0; }
+    tbody tr:hover { background:#ffffff06; }
+    .product-name { font-weight:700; }
+    .product-sub { color:var(--muted); font-size:11px; margin-top:4px; }
+    .pill { display:inline-block; border-radius:30px; padding:5px 9px; font-size:11px; font-weight:700; }
+    .pill.good { color:var(--green); background:#55d6a11a; }
+    .pill.low { color:var(--yellow); background:#f3c9691a; }
+    .pill.out { color:var(--red); background:#ff788b1a; }
+    .actions { display:flex; gap:6px; }
+    .small-btn { padding:7px 9px; font-size:12px; }
+    .empty { padding:35px; text-align:center; color:var(--muted); }
+    .footnote { color:var(--muted); font-size:12px; margin-top:14px; line-height:1.6; }
+    .modal-backdrop { position:fixed; inset:0; display:none; place-items:center; padding:18px; background:#080611c9; z-index:5; }
+    .modal-backdrop.show { display:grid; }
+    .modal { width:min(500px,100%); background:#19152a; border:1px solid var(--border); border-radius:18px; padding:22px; box-shadow:0 25px 80px #0009; }
+    .modal h2 { margin:0 0 18px; font-size:20px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .field { display:flex; flex-direction:column; gap:6px; }
+    .field.full { grid-column:1/-1; }
+    label { color:var(--muted); font-size:12px; }
+    .field input, .field select { width:100%; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
+    .toast { position:fixed; bottom:20px; left:50%; transform:translate(-50%,20px); opacity:0; pointer-events:none;
+      background:#28213c; border:1px solid var(--border); padding:11px 16px; border-radius:11px; transition:.25s; z-index:10; font-size:13px; }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    @media(max-width:850px) { .stats { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:560px) {
+      .app { padding:20px 13px 35px; } header { align-items:flex-start; flex-direction:column; }
+      .stats { gap:9px; } .stat { padding:14px; } .stat-value { font-size:22px; }
+      .form-grid { grid-template-columns:1fr; } .field.full { grid-column:auto; }
+      .filters { width:100%; } #search { flex:1; width:auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">J</div>
+        <div>
+          <h1>Jayz's Inventory Management</h1>
+          <div class="subtitle">A simple workspace to manage products and stock</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="exportBtn">Export CSV</button>
+        <button class="primary" id="addBtn">＋ Add Product</button>
+      </div>
+    </header>
+
+    <section class="stats" aria-label="Inventory summary">
+      <div class="stat"><div class="stat-label">Total Products</div><div class="stat-value" id="totalProducts">0</div><div class="stat-note">Different product items</div></div>
+      <div class="stat"><div class="stat-label">Total Units in Stock</div><div class="stat-value" id="totalUnits">0</div><div class="stat-note">Combined quantity</div></div>
+      <div class="stat"><div class="stat-label">Inventory Value</div><div class="stat-value" id="stockValue">₱0.00</div><div class="stat-note">Quantity × unit cost</div></div>
+      <div class="stat"><div class="stat-label">Low / Out of Stock</div><div class="stat-value" id="lowStock">0</div><div class="stat-note">Items needing attention</div></div>
+    </section>
+
+    <div class="toolbar">
+      <h2>Product Inventory</h2>
+      <div class="filters">
+        <input id="search" type="search" placeholder="Search products..." aria-label="Search products">
+        <select id="categoryFilter" aria-label="Filter by category"><option value="">All categories</option></select>
+        <select id="statusFilter" aria-label="Filter by stock status">
+          <option value="">All stock statuses</option><option value="good">In stock</option><option value="low">Low stock</option><option value="out">Out of stock</option>
+        </select>
+      </div>
+    </div>
+
+    <section class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Product</th><th>Category</th><th>Unit price</th><th>Quantity</th><th>Stock status</th><th>Actions</th></tr></thead>
+          <tbody id="productRows"></tbody>
+        </table>
+        <div class="empty" id="emptyState" hidden>No products found. Add your first product to get started.</div>
+      </div>
+    </section>
+    <p class="footnote">Your data is saved in this browser on this device using local storage. This starter version does not sync across devices or users. Export a CSV backup regularly.</p>
+  </main>
+
+  <div class="modal-backdrop" id="modalBackdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Add a product</h2>
+      <form id="productForm">
+        <div class="form-grid">
+          <div class="field full"><label for="name">Product name</label><input id="name" required maxlength="70" placeholder="e.g. Wireless Mouse"></div>
+          <div class="field"><label for="sku">SKU / Product code</label><input id="sku" maxlength="30" placeholder="e.g. WM-001"></div>
+          <div class="field"><label for="category">Category</label><input id="category" required maxlength="40" placeholder="e.g. Electronics"></div>
+          <div class="field"><label for="price">Unit price (₱)</label><input id="price" type="number" min="0" step="0.01" required placeholder="0.00"></div>
+          <div class="field"><label for="quantity">Quantity in stock</label><input id="quantity" type="number" min="0" step="1" required placeholder="0"></div>
+          <div class="field full"><label for="threshold">Low-stock alert when quantity is at or below</label><input id="threshold" type="number" min="0" step="1" value="5" required></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancelBtn">Cancel</button>
+          <button class="primary" type="submit">Save Product</button>
+        </div>
+      </form>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const STORAGE_KEY = "jayzsInventoryProducts_v1";
+    const starterProducts = [
+      { id: 1, name: "Wireless Mouse", sku: "WM-001", category: "Electronics", price: 450, quantity: 18, threshold: 5 },
+      { id: 2, name: "Notebook", sku: "NB-002", category: "School Supplies", price: 45, quantity: 4, threshold: 5 },
+      { id: 3, name: "Water Bottle", sku: "WB-003", category: "Accessories", price: 180, quantity: 0, threshold: 5 }
+    ];
+    let products = loadProducts();
+    let editingId = null;
+
+    const $ = id => document.getElementById(id);
+    const peso = amount => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(amount);
+
+    function loadProducts() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved === null ? starterProducts : JSON.parse(saved);
+      } catch {
+        return starterProducts;
+      }
+    }
+    function saveProducts() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    }
+    function stockStatus(product) {
+      if (product.quantity === 0) return "out";
+      if (product.quantity <= product.threshold) return "low";
+      return "good";
+    }
+    function statusLabel(status) {
+      return status === "out" ? "Out of stock" : status === "low" ? "Low stock" : "In stock";
+    }
+    function render() {
+      const totalUnits = products.reduce((sum, p) => sum + Number(p.quantity), 0);
+      const value = products.reduce((sum, p) => sum + Number(p.quantity) * Number(p.price), 0);
+      const attention = products.filter(p => stockStatus(p) !== "good").length;
+      $("totalProducts").textContent = products.length;
+      $("totalUnits").textContent = totalUnits.toLocaleString("en-PH");
+      $("stockValue").textContent = peso(value);
+      $("lowStock").textContent = attention;
+
+      const categories = [...new Set(products.map(p => p.category).filter(Boolean))].sort();
+      const currentCategory = $("categoryFilter").value;
+      $("categoryFilter").innerHTML = '<option value="">All categories</option>' +
+        categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+      $("categoryFilter").value = categories.includes(currentCategory) ? currentCategory : "";
+
+      const query = $("search").value.trim().toLowerCase();
+      const category = $("categoryFilter").value;
+      const status = $("statusFilter").value;
+      const filtered = products.filter(p => {
+        const matchesText = [p.name, p.sku, p.category].some(v => String(v || "").toLowerCase().includes(query));
+        return matchesText && (!category || p.category === category) && (!status || stockStatus(p) === status);
+      });
+
+      $("productRows").innerHTML = filtered.map(p => {
+        const state = stockStatus(p);
+        return `<tr>
+          <td><div class="product-name">${escapeHtml(p.name)}</div><div class="product-sub">${escapeHtml(p.sku || "No SKU")}</div></td>
+          <td>${escapeHtml(p.category)}</td>
+          <td>${peso(Number(p.price))}</td>
+          <td><strong>${Number(p.quantity).toLocaleString("en-PH")}</strong></td>
+          <td><span class="pill ${state}">${statusLabel(state)}</span></td>
+          <td><div class="actions">
+            <button class="small-btn" data-action="adjust" data-id="${p.id}" title="Adjust stock">± Stock</button>
+            <button class="small-btn" data-action="edit" data-id="${p.id}">Edit</button>
+            <button class="small-btn danger" data-action="delete" data-id="${p.id}">Delete</button>
+          </div></td>
+        </tr>`;
+      }).join("");
+      $("emptyState").hidden = filtered.length !== 0;
+    }
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+      })[char]);
+    }
+    function showModal(product = null) {
+      editingId = product ? product.id : null;
+      $("modalTitle").textContent = product ? "Edit product" : "Add a product";
+      $("name").value = product?.name || "";
+      $("sku").value = product?.sku || "";
+      $("category").value = product?.category || "";
+      $("price").value = product?.price ?? "";
+      $("quantity").value = product?.quantity ?? "";
+      $("threshold").value = product?.threshold ?? 5;
+      $("modalBackdrop").classList.add("show");
+      $("name").focus();
+    }
+    function closeModal() { $("modalBackdrop").classList.remove("show"); }
+    function notify(message) {
+      $("toast").textContent = message;
+      $("toast").classList.add("show");
+      setTimeout(() => $("toast").classList.remove("show"), 2200);
+    }
+
+    $("addBtn").addEventListener("click", () => showModal());
+    $("cancelBtn").addEventListener("click", closeModal);
+    $("modalBackdrop").addEventListener("click", e => { if (e.target === $("modalBackdrop")) closeModal(); });
+    $("search").addEventListener("input", render);
+    $("categoryFilter").addEventListener("change", render);
+    $("statusFilter").addEventListener("change", render);
+
+    $("productForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const product = {
+        id: editingId ?? Date.now(),
+        name: $("name").value.trim(),
+        sku: $("sku").value.trim(),
+        category: $("category").value.trim(),
+        price: Number($("price").value),
+        quantity: Number($("quantity").value),
+        threshold: Number($("threshold").value)
+      };
+      if (!product.name || !product.category || product.price < 0 || product.quantity < 0 || product.threshold < 0) {
+        notify("Please check the product details."); return;
+      }
+      if (editingId !== null) {
+        products = products.map(p => p.id === editingId ? product : p);
+        notify("Product updated.");
+      } else {
+        products.push(product);
+        notify("Product added.");
+      }
+      saveProducts(); closeModal(); render();
+    });
+
+    $("productRows").addEventListener("click", e => {
+      const button = e.target.closest("button[data-action]");
+      if (!button) return;
+      const id = Number(button.dataset.id);
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      if (button.dataset.action === "edit") showModal(product);
+      if (button.dataset.action === "delete") {
+        if (confirm(`Delete "${product.name}" from inventory?`)) {
+          products = products.filter(p => p.id !== id);
+          saveProducts(); render(); notify("Product deleted.");
+        }
+      }
+      if (button.dataset.action === "adjust") {
+        const change = prompt(`Current stock: ${product.quantity}\nEnter a number to add or subtract (example: 5 or -2):`, "1");
+        if (change === null) return;
+        const amount = Number(change);
+        if (!Number.isInteger(amount) || amount === 0 || product.quantity + amount < 0) {
+          notify("Enter a valid whole number. Stock cannot go below zero."); return;
+        }
+        product.quantity += amount;
+        saveProducts(); render(); notify("Stock quantity updated.");
+      }
+    });
+
+    $("exportBtn").addEventListener("click", () => {
+      if (!products.length) { notify("There are no products to export."); return; }
+      const headers = ["Product Name", "SKU", "Category", "Unit Price (PHP)", "Quantity", "Low Stock Threshold"];
+      const rows = products.map(p => [p.name, p.sku, p.category, p.price, p.quantity, p.threshold]);
+      const csv = [headers, ...rows].map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "jayzs-inventory.csv"; a.click();
+      URL.revokeObjectURL(url);
+      notify("CSV file exported.");
+    });
+
+    render();
+  </script>
+</body>
+</html>
