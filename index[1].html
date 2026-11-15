@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jayz's Inventory Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark">J</div>
+    <div>
+      <h1>Jayz's Inventory Management</h1>
+      <p>Simple stock tracking for your business</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="stats">
+      <article class="stat-card"><span>Total products</span><strong id="totalProducts">0</strong></article>
+      <article class="stat-card"><span>Total units in stock</span><strong id="totalUnits">0</strong></article>
+      <article class="stat-card"><span>Low-stock items</span><strong id="lowStock">0</strong></article>
+      <article class="stat-card"><span>Inventory value</span><strong id="inventoryValue">₱0.00</strong></article>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div><h2>Products</h2><p>Manage the items in your inventory.</p></div>
+        <button class="primary" id="addButton">＋ Add Product</button>
+      </div>
+
+      <div class="toolbar">
+        <input id="searchInput" type="search" placeholder="Search products...">
+        <select id="categoryFilter"><option value="">All categories</option></select>
+        <select id="stockFilter">
+          <option value="">All stock levels</option>
+          <option value="low">Low stock (5 or less)</option>
+          <option value="available">In stock</option>
+          <option value="out">Out of stock</option>
+        </select>
+        <button class="secondary" id="exportButton">Export CSV</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Quantity</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="productRows"></tbody>
+        </table>
+        <p id="emptyMessage" class="empty">No products yet. Select “Add Product” to get started.</p>
+      </div>
+    </section>
+    <p class="note">Demo version: products are saved in this browser on this device. They do not automatically sync to other devices.</p>
+  </main>
+
+  <dialog id="productDialog">
+    <form id="productForm">
+      <div class="dialog-heading"><h2 id="dialogTitle">Add Product</h2><button type="button" class="close" id="closeDialog" aria-label="Close">×</button></div>
+      <label>Product name<input id="productName" required maxlength="80" placeholder="e.g. Bottled water"></label>
+      <label>Category<input id="productCategory" required maxlength="50" placeholder="e.g. Drinks"></label>
+      <div class="two-columns">
+        <label>Price (₱)<input id="productPrice" type="number" min="0" step="0.01" required placeholder="0.00"></label>
+        <label>Quantity<input id="productQuantity" type="number" min="0" step="1" required placeholder="0"></label>
+      </div>
+      <input id="productId" type="hidden">
+      <div class="dialog-actions"><button type="button" class="secondary" id="cancelButton">Cancel</button><button class="primary" type="submit">Save Product</button></div>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>
